@@ -8,7 +8,6 @@ from typing import Iterable
 
 import chromadb
 from chromadb.errors import NotFoundError
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 try:
     from langchain_chroma import Chroma
@@ -30,6 +29,12 @@ MANIFEST_FILE = "source_manifest.json"
 
 def build_embeddings(settings: Settings) -> Embeddings:
     if settings.embedding_uses_ollama:
+        try:
+            from langchain_ollama import OllamaEmbeddings
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "langchain-ollama is required for Ollama embeddings. Install it with: pip install langchain-ollama",
+            ) from exc
         return OllamaEmbeddings(
             model=settings.embedding_model,
             base_url=settings.resolved_embedding_base_url,

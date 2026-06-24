@@ -16,8 +16,8 @@ import os
 import time
 from pathlib import Path
 
-import fitz  # PyMuPDF
 from dotenv import load_dotenv
+import pymupdf as fitz
 
 from data.pipeline.clean import clean_thai_text
 
