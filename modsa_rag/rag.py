@@ -44,9 +44,9 @@ def build_llm(settings: Settings) -> ChatOpenAI:
 def format_context(docs) -> str:
     parts: list[str] = []
     for index, doc in enumerate(docs, start=1):
-        source = doc.metadata.get("source", "unknown source")
-        page = doc.metadata.get("page")
-        label = f"{source}"
+        meta = doc.metadata
+        label = meta.get("title") or meta.get("source", "unknown source")
+        page = meta.get("page")
         if page is not None:
             label = f"{label}, page {int(page) + 1}"
         parts.append(f"[{index}] {label}\n{doc.page_content}")
@@ -57,13 +57,20 @@ def source_summary(docs) -> list[dict[str, object]]:
     seen: set[tuple[object, object]] = set()
     sources: list[dict[str, object]] = []
     for doc in docs:
-        source = doc.metadata.get("source", "unknown")
-        page = doc.metadata.get("page")
+        meta = doc.metadata
+        source = meta.get("source", "unknown")
+        page = meta.get("page")
         key = (source, page)
         if key in seen:
             continue
         seen.add(key)
         item: dict[str, object] = {"source": source}
+        if meta.get("title"):
+            item["title"] = meta["title"]
+        if meta.get("department"):
+            item["department"] = meta["department"]
+        if meta.get("source_url"):
+            item["url"] = meta["source_url"]
         if page is not None:
             item["page"] = int(page) + 1
         sources.append(item)

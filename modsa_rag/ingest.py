@@ -111,11 +111,56 @@ def collection_document_count(settings: Settings) -> int:
     return int(collection.count())
 
 
+def load_json_documents(path: Path) -> list[Document]:
+    """Load a prepared MOD-SA chunks JSON into pre-chunked Documents.
+
+    Expects the schema produced by ``pipeline/chunk.py``::
+
+        {"doc_id": ..., "metadata": {...}, "chunks": [{content, page, section, ...}]}
+
+    Each chunk becomes one Document with citation metadata merged in. The
+    ``_prechunked`` flag tells :func:`split_documents` to leave these as-is.
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    doc_meta = data.get("metadata", {})
+    doc_id = data.get("doc_id", path.stem)
+
+    documents: list[Document] = []
+    for chunk in data.get("chunks", []):
+        content = (chunk.get("content") or "").strip()
+        if not content:
+            continue
+        metadata: dict[str, object] = {
+            "source": doc_meta.get("source_name") or doc_id,
+            "doc_id": doc_id,
+            "chunk_id": chunk.get("chunk_id", ""),
+            "_prechunked": True,
+        }
+        for key in ("category", "title", "department", "source_url", "language", "last_updated"):
+            value = doc_meta.get(key)
+            if value:
+                metadata[key] = value
+        if chunk.get("section"):
+            metadata["section"] = chunk["section"]
+        if chunk.get("page") is not None:
+            # our pages are 1-indexed; rag.py displays page + 1, so store 0-indexed
+            metadata["page"] = int(chunk["page"]) - 1
+        documents.append(Document(page_content=content, metadata=metadata))
+    return documents
+
+
 def load_documents(files: list[Path]) -> tuple[list[Document], list[dict[str, object]]]:
     documents: list[Document] = []
     skipped: list[dict[str, object]] = []
     for path in files:
         suffix = path.suffix.lower()
+        if suffix == ".json":
+            try:
+                documents.extend(load_json_documents(path))
+            except (json.JSONDecodeError, OSError, ValueError) as exc:
+                logger.warning("Skipping %s: %s", path, exc)
+                skipped.append({"source": str(path), "reason": str(exc)})
+            continue
         try:
             if suffix == ".pdf":
                 loaded = PyPDFLoader(str(path)).load()
@@ -137,7 +182,13 @@ def split_documents(settings: Settings, documents: list[Document]) -> list[Docum
         chunk_overlap=settings.chunk_overlap,
         separators=["\n\n", "\n", " ", ""],
     )
-    return splitter.split_documents(documents)
+    # Documents loaded from prepared chunks JSON are already chunked — keep them
+    # as-is and only split the rest (PDF/text/markdown).
+    prechunked = [doc for doc in documents if doc.metadata.get("_prechunked")]
+    to_split = [doc for doc in documents if not doc.metadata.get("_prechunked")]
+    for doc in prechunked:
+        doc.metadata.pop("_prechunked", None)
+    return splitter.split_documents(to_split) + prechunked
 
 
 def reset_collection(settings: Settings) -> None:

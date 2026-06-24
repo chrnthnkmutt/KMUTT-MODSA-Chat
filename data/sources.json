@@ -1,0 +1,61 @@
+{
+  "_README": "Human-edited metadata sidecar for nicer citations. pipeline/chunk.py reads the 'docs' map (keyed by doc_id = file stem) and merges these fields into each chunk's metadata. ฝ่าย data เติม title/department/source_url/contact ที่นี่ (ไม่ต้องแก้ใน chunks/*.json เพราะถูก generate ทับทุกครั้ง). ค่า department บางตัวเป็นการคาดเดา — ตรวจสอบแล้วตั้ง verified=true.",
+  "docs": {
+    "AcademicCalendar2026-2569TH2": {
+      "title": "ปฏิทินการศึกษา ประจำปีการศึกษา 2569",
+      "category": "academic_calendar",
+      "department": "สำนักงานทะเบียนนักศึกษา",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "undergraduate_program_fees_2569": {
+      "title": "ค่าใช้จ่ายตลอดหลักสูตร ระดับปริญญาตรี ปีการศึกษา 2569",
+      "category": "fees",
+      "department": "สำนักงานทะเบียนนักศึกษา",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "student_online_registration_guide": {
+      "title": "คู่มือการลงทะเบียนเรียนผ่านระบบออนไลน์ (New ACIS)",
+      "category": "registration",
+      "department": "สำนักงานทะเบียนนักศึกษา",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "rule_exam2560": {
+      "title": "ระเบียบ/ข้อบังคับการสอบ (พ.ศ. 2560)",
+      "category": "academic_rules",
+      "department": "",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "R1_petch_scholarship_criteria_2569": {
+      "title": "เกณฑ์การรับสมัครทุนเพชรพระจอมเกล้า ปีการศึกษา 2569",
+      "category": "scholarship",
+      "department": "กลุ่มงานช่วยเหลือทางการเงินแก่นักศึกษา",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "student_housing": {
+      "title": "ข้อมูลหอพักนักศึกษา",
+      "category": "dormitory",
+      "department": "งานหอพักนักศึกษา",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    },
+    "MODsa-proposal_students": {
+      "title": "ข้อเสนอโครงการ MOD-SA",
+      "category": "others",
+      "department": "",
+      "source_url": "",
+      "contact": "",
+      "verified": false
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# Extra deps for the data-preparation pipeline (separate from the app)
+pymupdf>=1.24
+python-dotenv>=1.0
+typhoon-ocr
