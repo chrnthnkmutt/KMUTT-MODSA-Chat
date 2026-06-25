@@ -1,27 +1,27 @@
 # MOD-SA RAG Starter
 
-Simple Python RAG architecture for the MOD-SA KMUTT Student Affairs chatbot.
+Python RAG system for the MOD-SA KMUTT Student Affairs chatbot.
+Two decoupled sides that meet only at `chunks/`:
 
-The starter uses:
+- **🟦 Data pipeline (`data/`)** — turns source documents into clean, chunked JSON
+- **🟩 RAG app (`modsa_rag/`)** — indexes `chunks/` and answers questions with citations
 
-- FastAPI for a small HTTP API callable by `curl`
-- LangChain for document loading, splitting, retrieval, and prompting
-- Chroma DB as the persistent vector store
-- OpenAI-compatible chat and embedding APIs with separate base URLs and API keys
-- Automatic ingestion on server startup when source files change
+Stack: FastAPI · LangChain · Chroma · OpenAI-compatible LLM/embeddings (Ollama by
+default) · Typhoon OCR for scanned Thai PDFs.
 
 ## Setup
 
-### For MacOS and Linux
+### macOS / Linux
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt          # RAG app deps
+pip install -r data/requirements.txt     # data pipeline deps (for the data team)
 cp .env.example .env
 ```
 
-### For Windows users
+### Windows
 
 ```bash
 python -m venv .venv
@@ -30,23 +30,23 @@ python -m pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` with your LLM and embedding provider settings.
+## Configure `.env`
 
-Both model providers are OpenAI-compatible:
+Copy `.env.example` → `.env` and adjust. Defaults target a local Ollama:
 
 ```env
-LLM_BASE_URL=https://your-chat-provider.example/v1
-LLM_API_KEY=your-chat-key
-LLM_MODEL=your-chat-model
+LLM_BASE_URL="http://localhost:11434/v1"
+LLM_API_KEY="ollama"
+LLM_MODEL="minimax-m3:cloud"
 
-EMBEDDING_BASE_URL=https://your-embedding-provider.example/v1
-EMBEDDING_API_KEY=your-embedding-key
-EMBEDDING_MODEL=your-embedding-model
+EMBEDDING_BASE_URL="http://localhost:11434/v1"
+EMBEDDING_API_KEY="ollama"
+EMBEDDING_MODEL="bge-m3:latest"
 
 # RAG storage and ingestion
 CHROMA_DIR="chroma_db"
 CHROMA_COLLECTION="modsa_kmutt"
-RAG_SOURCE_PATHS="knowledge,MODsa-proposal_students.pdf"
+RAG_SOURCE_PATHS="chunks"
 CHUNK_SIZE="1000"
 CHUNK_OVERLAP="150"
 RETRIEVAL_K="4"
@@ -54,24 +54,31 @@ RETRIEVAL_K="4"
 # API
 APP_HOST="127.0.0.1"
 APP_PORT="8000"
+
+# Data pipeline · Typhoon OCR (scanned PDFs only)
+TYPHOON_OCR_API_KEY="your-typhoon-ocr-key"
 ```
 
-## Add Knowledge Files
+Using Ollama? Pull the embedding model first: `ollama pull bge-m3`.
 
-Put official KMUTT/student-affairs knowledge files in `knowledge/`.
+## Prepare knowledge (data side)
 
-Supported starter formats:
+Put official KMUTT documents in `data/raw/<category>/`
+(categories: `registration`, `fees`, `academic_rules`, `scholarship`,
+`dormitory`, `academic_calendar`, `others`). Supported: `.pdf`, `.txt`, `.md`.
 
-- `.pdf`
-- `.txt`
-- `.md`
-- `.json`
+Then run the pipeline from the repo root:
 
-By default the app scans both `knowledge/` and `MODsa-proposal_students.pdf`.
+```bash
+python -m data.pipeline.triage      # see what each file needs
+python -m data.pipeline.normalize   # -> data/processed/ (clean Markdown)
+python -m data.pipeline.chunk       # -> chunks/ (JSON + metadata)
+```
 
-The app does not require a human to run a separate ingestion command every time. On startup and before each `/ask` request, it fingerprints source files and refreshes Chroma only when files were added, removed, or changed.
+Edit `data/sources.json` to enrich citation metadata (title/department/url), then
+re-run `chunk`. Full guide: `data/pipeline/README.md`.
 
-## Run
+## Run the app
 
 ### For MacOS and Linux
 
@@ -101,8 +108,10 @@ Response shape:
   "answer": "...",
   "sources": [
     {
-      "source": "MODsa-proposal_students.pdf",
-      "page": 1
+      "source": "AcademicCalendar2026-2569TH2",
+      "title": "ปฏิทินการศึกษา ประจำปีการศึกษา 2569",
+      "department": "สำนักงานทะเบียนนักศึกษา",
+      "page": 2
     }
   ]
 }
@@ -110,24 +119,35 @@ Response shape:
 
 ## Useful Endpoints
 
-- `GET /health` checks service status.
+- `GET /health` checks service status and the last ingestion result.
 - `POST /ask` asks the RAG chatbot.
 - `POST /reindex` forces a full rebuild of the Chroma collection.
 
 ## Project Layout
 
 ```text
-modsa_rag/
-  api.py        FastAPI endpoints
-  config.py     environment-based settings
-  ingest.py     automatic source scanning and indexing
-  rag.py        LangChain RAG chain
-knowledge/      place source documents here
-chroma_db/      generated Chroma vector database
+data/                 🟦 DATA side
+  pipeline/           triage / normalize / chunk / clean
+  raw/                source documents (by category)
+  processed/          generated clean Markdown
+  sources.json        hand-filled citation metadata
+  requirements.txt    data pipeline deps
+chunks/               📦 handoff (data -> rag)
+modsa_rag/            🟩 RAG side
+  api.py              FastAPI endpoints
+  config.py           environment-based settings
+  ingest.py           chunks JSON loader + indexing
+  rag.py              retrieval + prompting
+chroma_db/            generated Chroma vector database
+requirements.txt      RAG app deps
 ```
 
 ## Notes
 
 - Do not commit `.env`, API keys, tokens, or private student data.
 - Use official university sources for production knowledge.
-- If the retrieved context is insufficient, the assistant is instructed to say it does not have enough information instead of guessing.
+- High-risk data (fees, dates, scholarship eligibility) must be human-verified
+  against the original document before use.
+- If the retrieved context is insufficient, the assistant is instructed to say it
+  does not have enough information instead of guessing.
+```
