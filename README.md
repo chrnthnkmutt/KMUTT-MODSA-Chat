@@ -73,8 +73,16 @@ The app does not require a human to run a separate ingestion command every time.
 
 ## Run
 
+### For MacOS and Linux
+
 ```bash
 uvicorn modsa_rag.api:app --reload --host 127.0.0.1 --port 8000
+```
+
+### For Windows users
+
+```bash
+python -m uvicorn modsa_rag.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ## Ask With Curl
