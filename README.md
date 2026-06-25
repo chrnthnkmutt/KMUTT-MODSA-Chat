@@ -26,7 +26,7 @@ cp .env.example .env
 ```bash
 python -m venv .venv
 .venv/Script/activate
-pip intsall -r requirements.txt
+pip install -r requirements.txt
 cp .env.example .env
 ```
 
