@@ -8,7 +8,7 @@ from typing import Iterable
 
 import chromadb
 from chromadb.errors import NotFoundError
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 try:
     from langchain_chroma import Chroma
