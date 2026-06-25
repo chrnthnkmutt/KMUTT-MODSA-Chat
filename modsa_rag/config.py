@@ -13,7 +13,11 @@ DEFAULT_OPENAI_COMPAT_KEY = "sk-local-placeholder"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",  # tolerate pipeline-only env vars (e.g. TYPHOON_OCR_API_KEY)
+    )
 
     llm_base_url: str = Field(default="https://api.openai.com/v1", alias="LLM_BASE_URL")
     llm_api_key: str | None = Field(
@@ -31,7 +35,7 @@ class Settings(BaseSettings):
 
     chroma_dir: Path = Field(default=Path("chroma_db"), alias="CHROMA_DIR")
     chroma_collection: str = Field(default="modsa_kmutt", alias="CHROMA_COLLECTION")
-    rag_source_paths: str = Field(default="knowledge,MODsa-proposal_students.pdf", alias="RAG_SOURCE_PATHS")
+    rag_source_paths: str = Field(default="chunks", alias="RAG_SOURCE_PATHS")
     chunk_size: int = Field(default=1000, alias="CHUNK_SIZE")
     chunk_overlap: int = Field(default=150, alias="CHUNK_OVERLAP")
     retrieval_k: int = Field(default=4, alias="RETRIEVAL_K")
