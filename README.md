@@ -25,8 +25,8 @@ cp .env.example .env
 
 ```bash
 python -m venv .venv
-.venv/Script/activate
-pip install -r requirements.txt
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
 cp .env.example .env
 ```
 
