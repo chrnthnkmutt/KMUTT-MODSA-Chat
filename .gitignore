@@ -9,3 +9,6 @@ __pycache__/
 chroma_db/
 *.log
 
+data/raw/
+
+.DS_Store
