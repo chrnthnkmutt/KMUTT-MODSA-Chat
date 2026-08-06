@@ -53,7 +53,7 @@ CHUNK_SIZE = 1000   # เป้าหมายต่อ chunk (ตัวอั�
 CHUNK_MIN = 200     # chunk เล็กกว่านี้จะถูกรวมเข้ากับ chunk ก่อนหน้า
 CHUNK_MAX = 1600    # เพดาน: block เดี่ยวที่ใหญ่กว่านี้ถึงจะโดน fallback split
 
-PAGE_RE = re.compile(r"<!--\s*page:\s*(\d+)")  # รวม variant (OCR FAILED)
+PAGE_RE = re.compile(r"<!--\sPage\s(\d+)")  # รวม variant (OCR FAILED)
 PAGE_TAG_RE = re.compile(r"<page_number>[^<]*</page_number>")
 FOOTER_RE = re.compile(r"^\s*(หน้า\s*\d+|\d+\s*/\s*\d+)\s*$")  # เลขหน้าที่ OCR ติดมา
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+)$")
